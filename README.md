@@ -95,6 +95,8 @@ Extract: Confluence space + label to Markdown and optional manifest. Push: one t
 
 ## Docker
 
+**Windows users:** See [docs/WINDOWS_SETUP.md](docs/WINDOWS_SETUP.md) for a full installation and run guide (prerequisites, Docker, and optional NotebookLM auth).
+
 ### Phase 4: Full stack with Docker Compose
 
 Run the full stack (PostgreSQL, backend API, frontend dashboard) in separate containers:
