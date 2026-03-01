@@ -1,0 +1,94 @@
+# Phase 4: Full stack — postgres, backend, frontend; optional app for scripts/tests.
+# Usage:
+#   docker compose up -d                    # start postgres, backend, frontend
+#   docker compose run --rm backend alembic -c backend/alembic.ini upgrade head  # migrations (from repo root)
+#   docker compose run --rm app pytest tests/ -v   # run tests
+#   docker compose run --rm app python extract_confluence.py ...  # manual script run
+# Copy .env.example to .env and set POSTGRES_PASSWORD etc.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: agents-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-agents}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-agents}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: agents-backend:latest
+    container_name: agents-backend
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: /app
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-agents}
+      PROJECT_ROOT: /app
+      CONFLUENCE_URL: ${CONFLUENCE_URL:-}
+      CONFLUENCE_USER: ${CONFLUENCE_USER:-}
+      CONFLUENCE_PASSWORD: ${CONFLUENCE_PASSWORD:-}
+      NOTEBOOKLM_HOME: /app/.notebooklm
+      NOTEBOOKLM_NOTEBOOK_NAME: ${NOTEBOOKLM_NOTEBOOK_NAME:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ${NOTEBOOKLM_AUTH_DIR:-$HOME/.notebooklm}:/app/.notebooklm
+    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    image: agents-frontend:latest
+    container_name: agents-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PYTHON_VERSION: "3.12"
+    image: agents-app:latest
+    container_name: agents-app
+    working_dir: /app
+    environment:
+      PYTHONPATH: /app
+      NOTEBOOKLM_HOME: /app/.notebooklm
+      CONFLUENCE_URL: ${CONFLUENCE_URL:-}
+      CONFLUENCE_USER: ${CONFLUENCE_USER:-}
+      CONFLUENCE_PASSWORD: ${CONFLUENCE_PASSWORD:-}
+      NOTEBOOKLM_NOTEBOOK_NAME: ${NOTEBOOKLM_NOTEBOOK_NAME:-}
+    volumes:
+      - .:/app
+      - ${NOTEBOOKLM_AUTH_DIR:-$HOME/.notebooklm}:/app/.notebooklm
+    command: ["tail", "-f", "/dev/null"]
+    stdin_open: true
+    tty: true
+    profiles:
+      - tools
+
+volumes:
+  postgres_data: {}

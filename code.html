@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Workflow &amp; File Dashboard V2</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3713ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#131022",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(41, 35, 72, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-card {
+            background: rgba(59, 50, 103, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            background: rgba(59, 50, 103, 0.5);
+            border-color: rgba(55, 19, 236, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
+<div class="relative flex h-full grow flex-col">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 glass-panel border-b border-white/5 px-6 py-3">
+<div class="flex items-center justify-between mx-auto max-w-[1440px] w-full">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-lg bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">dataset</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold tracking-tight">Workflow Pro</h2>
+</div>
+<div class="hidden md:flex items-center w-80 relative group">
+<div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="w-full bg-slate-100 dark:bg-[#292348]/50 border-none rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Search workflows, files..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden lg:flex items-center gap-8">
+<a class="text-primary font-semibold text-sm" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors text-sm font-medium" href="#">Workflows</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors text-sm font-medium" href="#">Files</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors text-sm font-medium" href="#">Analytics</a>
+</nav>
+<div class="flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-white/10">
+<button class="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#131022]"></span>
+</button>
+<button class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+</button>
+<div class="h-9 w-9 rounded-full bg-gradient-to-tr from-primary to-purple-500 p-[2px] cursor-pointer">
+<div class="h-full w-full rounded-full bg-slate-800 bg-center bg-cover border-2 border-background-dark" data-alt="User profile portrait" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBrLt6AXrJJ6st8Y9PwGwFEetrj2QnKN7otLXYFK6BwbZT-w0VUR2UkLoBRIOLHppvozuGeO64_azcQy07n3hBNFYHCzUEQ1tAr6a3RY7FOJCJOv7s9huuCpNTVz9EoI2rayoD6rwDIW7pqYUpi0_I9gq_UXLuIBNDWCH1IZa8oUP7cdOPrK5TadQQ3BOHT0tIdnULB82axDY9QHt0soIhc3_mq4fPHpOHW9AkLa4WzR-9Odf2-n6YxbSHJwdm0gShLYSVcbNqbKw');"></div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-[1440px] mx-auto p-6 md:p-8 lg:px-12">
+<div class="flex flex-col gap-2 mb-8">
+<h1 class="text-3xl font-bold text-slate-900 dark:text-white">Overview</h1>
+<p class="text-slate-500 dark:text-slate-400">Welcome back, check your workflow status and recent files.</p>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="glass-card rounded-xl p-6 relative overflow-hidden group">
+<div class="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-primary">bolt</span>
+</div>
+<div class="flex flex-col gap-4 relative z-10">
+<div class="flex items-center justify-between">
+<p class="text-slate-400 text-sm font-medium uppercase tracking-wider">Total Executions</p>
+<span class="bg-emerald-500/10 text-emerald-500 text-xs font-bold px-2 py-1 rounded-full">+12.5%</span>
+</div>
+<div class="flex items-end gap-2">
+<p class="text-4xl font-bold text-white">1,245</p>
+<p class="text-slate-400 text-sm mb-1.5">runs this month</p>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-xl p-6 relative overflow-hidden group">
+<div class="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-blue-400">check_circle</span>
+</div>
+<div class="flex flex-col gap-4 relative z-10">
+<div class="flex items-center justify-between">
+<p class="text-slate-400 text-sm font-medium uppercase tracking-wider">Success Rate</p>
+<span class="bg-emerald-500/10 text-emerald-500 text-xs font-bold px-2 py-1 rounded-full">+0.8%</span>
+</div>
+<div class="flex items-end gap-2">
+<p class="text-4xl font-bold text-white">98.5%</p>
+<p class="text-slate-400 text-sm mb-1.5">avg. stability</p>
+</div>
+<!-- Progress bar decoration -->
+<div class="w-full bg-slate-700/30 h-1.5 rounded-full mt-1 overflow-hidden">
+<div class="bg-blue-500 h-full rounded-full" style="width: 98.5%"></div>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-xl p-6 relative overflow-hidden group">
+<div class="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-orange-400">timer</span>
+</div>
+<div class="flex flex-col gap-4 relative z-10">
+<div class="flex items-center justify-between">
+<p class="text-slate-400 text-sm font-medium uppercase tracking-wider">Avg Duration</p>
+<span class="bg-orange-500/10 text-orange-500 text-xs font-bold px-2 py-1 rounded-full">-2.4s</span>
+</div>
+<div class="flex items-end gap-2">
+<p class="text-4xl font-bold text-white">45s</p>
+<p class="text-slate-400 text-sm mb-1.5">per workflow</p>
+</div>
+<!-- Mini graph decoration -->
+<div class="flex gap-1 items-end h-3 mt-2">
+<div class="w-1 bg-orange-500/30 h-1/2 rounded-full"></div>
+<div class="w-1 bg-orange-500/40 h-3/4 rounded-full"></div>
+<div class="w-1 bg-orange-500/60 h-2/3 rounded-full"></div>
+<div class="w-1 bg-orange-500/80 h-full rounded-full"></div>
+<div class="w-1 bg-orange-500 h-5/6 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Automated Workflows Section -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-bold text-white">Active Pipelines</h3>
+<button class="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1">
+                            View All <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Workflow Card 1 -->
+<div class="glass-card rounded-xl p-5 flex flex-col md:flex-row gap-6 items-center">
+<div class="relative w-full md:w-48 h-32 rounded-lg overflow-hidden shrink-0">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+<div class="w-full h-full bg-cover bg-center" data-alt="Abstract data visualization with graphs" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD6uN3wctamGiAsgeBEk9ei7kwsa90q7xR-dIrVWUtJ00-_bFkDkF5ngwcDEo_4tCKmJr9R6mxkvZv94e2m8NsEu4xv6CDQmiW7Gl-Aho9egw_lta1S6bl5m1STfmuRu5i-DqY3kTqMEpJgrHhjge2mwWUu5Ddj78vpXenB1yY2jP14Kn5ZDb3y09SglPgodustYy1G0k2T_Sj8BfqvLtjr75dVat827of1Hiw8RDcQ9HxaRLIObyrtpQWzc4nIGEfB9W1yfa2IIQ');"></div>
+<div class="absolute bottom-3 left-3 z-20 flex items-center gap-1.5">
+<div class="size-2 rounded-full bg-emerald-400 animate-pulse"></div>
+<span class="text-xs font-medium text-white">Running</span>
+</div>
+</div>
+<div class="flex flex-col gap-3 flex-1 w-full">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="text-lg font-bold text-white">Data Sync Pipeline</h4>
+<p class="text-sm text-slate-400">Syncs customer data between CRM and Database</p>
+</div>
+<button class="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-4 mt-1">
+<div class="flex items-center gap-2 text-sm text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+<span class="material-symbols-outlined text-[18px] text-blue-400">schedule</span>
+<span>2m ago</span>
+</div>
+<div class="flex items-center gap-2 text-sm text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+<span class="material-symbols-outlined text-[18px] text-purple-400">memory</span>
+<span>1.2 GB processed</span>
+</div>
+</div>
+</div>
+<div class="flex md:flex-col gap-2 w-full md:w-auto mt-2 md:mt-0">
+<button class="flex-1 md:flex-none px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-primary/20">
+                                    Details
+                                </button>
+<button class="flex-1 md:flex-none px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold rounded-lg transition-colors border border-white/5">
+                                    Logs
+                                </button>
+</div>
+</div>
+<!-- Workflow Card 2 -->
+<div class="glass-card rounded-xl p-5 flex flex-col md:flex-row gap-6 items-center">
+<div class="relative w-full md:w-48 h-32 rounded-lg overflow-hidden shrink-0">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+<div class="w-full h-full bg-cover bg-center" data-alt="Abstract fluid gradient background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCbEDA9zvCyXsRWIb-KloiqAkFisdC2h6zIFoMi37_VIPpLDcIvFkYPqHeXeLw7PE4UeRi75MSHnS_JjnsVsPYQRWLQmMv9DOHeeuJT9G3CJBGws9nMMcxfx3RNcoa_lp9DSfK0eEicwyRDGgmFhltbm8K0i9_3UrWhA6egNcfJos0ndzEGEuBXmJdDcefCLqdUdaF_Kt1OHIbQCD_azeFYrXv5_QRkkn_6ie54RK1i-0kus3l9FXvW7Lwu2i8uYBt50NQe6hQkZQ');"></div>
+<div class="absolute bottom-3 left-3 z-20 flex items-center gap-1.5">
+<div class="size-2 rounded-full bg-slate-400"></div>
+<span class="text-xs font-medium text-white">Idle</span>
+</div>
+</div>
+<div class="flex flex-col gap-3 flex-1 w-full">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="text-lg font-bold text-white">Email Automation</h4>
+<p class="text-sm text-slate-400">Daily newsletter distribution workflow</p>
+</div>
+<button class="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-4 mt-1">
+<div class="flex items-center gap-2 text-sm text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+<span class="material-symbols-outlined text-[18px] text-blue-400">schedule</span>
+<span>15m ago</span>
+</div>
+<div class="flex items-center gap-2 text-sm text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+<span class="material-symbols-outlined text-[18px] text-orange-400">mail</span>
+<span>15k sent</span>
+</div>
+</div>
+</div>
+<div class="flex md:flex-col gap-2 w-full md:w-auto mt-2 md:mt-0">
+<button class="flex-1 md:flex-none px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold rounded-lg transition-colors border border-white/5">
+                                    Details
+                                </button>
+</div>
+</div>
+<!-- Workflow Card 3 -->
+<div class="glass-card rounded-xl p-5 flex flex-col md:flex-row gap-6 items-center">
+<div class="relative w-full md:w-48 h-32 rounded-lg overflow-hidden shrink-0">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+<div class="w-full h-full bg-cover bg-center" data-alt="Dark abstract blockchain geometric pattern" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDafk5oENqPQG6JKRyyoGPsp-q_F9GimgINWYDdj6CFaqJRK052kTMucMPYowlVMHIvI_PaV6wRd0NNT2B3NRsMj-IAzBSdzihRIlQMXz6X7xt16TjOX70z43HyZzfLNfLxz9H6D8JjPXxvgHknDWY97Asgl779ag_3zjmidipiUVWhTs3-G46P4nvYDJ-X8fHiXjpxAx9LiEysya3qVPppQNjiHXnd0hgGlE45HYi6uNW76wmpxDTzN-Hfkq9bfMRYN_35SqfaMQ');"></div>
+<div class="absolute bottom-3 left-3 z-20 flex items-center gap-1.5">
+<div class="size-2 rounded-full bg-slate-400"></div>
+<span class="text-xs font-medium text-white">Scheduled</span>
+</div>
+</div>
+<div class="flex flex-col gap-3 flex-1 w-full">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="text-lg font-bold text-white">Inventory Check</h4>
+<p class="text-sm text-slate-400">Hourly inventory level verification</p>
+</div>
+<button class="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-4 mt-1">
+<div class="flex items-center gap-2 text-sm text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+<span class="material-symbols-outlined text-[18px] text-blue-400">schedule</span>
+<span>Next: 10m</span>
+</div>
+</div>
+</div>
+<div class="flex md:flex-col gap-2 w-full md:w-auto mt-2 md:mt-0">
+<button class="flex-1 md:flex-none px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold rounded-lg transition-colors border border-white/5">
+                                    Config
+                                </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Cloud Files Widget -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-bold text-white">Cloud Files</h3>
+<button class="p-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors">
+<span class="material-symbols-outlined">add_circle</span>
+</button>
+</div>
+<div class="glass-panel rounded-xl p-0 flex flex-col h-full overflow-hidden border border-white/10">
+<!-- Drag & Drop Zone -->
+<div class="p-4 border-b border-white/5">
+<div class="border-2 border-dashed border-slate-600 hover:border-primary/50 bg-slate-800/20 hover:bg-slate-800/40 rounded-lg p-6 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer group">
+<div class="p-3 bg-slate-800 rounded-full text-slate-400 group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">cloud_upload</span>
+</div>
+<p class="text-sm font-medium text-slate-300">Drop files to upload</p>
+<p class="text-xs text-slate-500">or click to browse</p>
+</div>
+</div>
+<!-- Search -->
+<div class="px-4 py-3 border-b border-white/5">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[18px]">search</span>
+<input class="w-full bg-[#1e1933] border-none rounded-lg text-sm text-white placeholder:text-slate-600 focus:ring-1 focus:ring-primary py-2 pl-9 pr-3" placeholder="Search docs..." type="text"/>
+</div>
+</div>
+<!-- Files List -->
+<div class="flex-1 overflow-y-auto max-h-[400px] p-2 space-y-1">
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer group transition-colors">
+<div class="bg-blue-500/20 p-2 rounded text-blue-400">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</div>
+<div class="flex-1 min-w-0">
+<h5 class="text-sm font-medium text-white truncate">Q3_Financial_Report.pdf</h5>
+<p class="text-xs text-slate-500">2.4 MB • Just now</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/10 rounded text-slate-400 transition-all">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer group transition-colors">
+<div class="bg-green-500/20 p-2 rounded text-green-400">
+<span class="material-symbols-outlined text-[20px]">table_view</span>
+</div>
+<div class="flex-1 min-w-0">
+<h5 class="text-sm font-medium text-white truncate">Customer_List_2023.csv</h5>
+<p class="text-xs text-slate-500">145 KB • 2h ago</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/10 rounded text-slate-400 transition-all">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer group transition-colors">
+<div class="bg-orange-500/20 p-2 rounded text-orange-400">
+<span class="material-symbols-outlined text-[20px]">folder</span>
+</div>
+<div class="flex-1 min-w-0">
+<h5 class="text-sm font-medium text-white truncate">Project Assets</h5>
+<p class="text-xs text-slate-500">12 items • 1d ago</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/10 rounded text-slate-400 transition-all">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer group transition-colors">
+<div class="bg-purple-500/20 p-2 rounded text-purple-400">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</div>
+<div class="flex-1 min-w-0">
+<h5 class="text-sm font-medium text-white truncate">Design_Mockups_v2.fig</h5>
+<p class="text-xs text-slate-500">45 MB • 2d ago</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/10 rounded text-slate-400 transition-all">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer group transition-colors">
+<div class="bg-blue-500/20 p-2 rounded text-blue-400">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</div>
+<div class="flex-1 min-w-0">
+<h5 class="text-sm font-medium text-white truncate">Meeting_Notes.docx</h5>
+<p class="text-xs text-slate-500">12 KB • 3d ago</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/10 rounded text-slate-400 transition-all">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
