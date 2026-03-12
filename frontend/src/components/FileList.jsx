@@ -9,10 +9,13 @@ function formatDate(dateStr) {
   return d.toLocaleDateString();
 }
 
-export default function FileList({ files = [], loading }) {
+export default function FileList({ files = [], loading, authUploader }) {
   return (
     <section className="flex-1 min-w-0 lg:max-w-md" id="files" aria-label="Exported files">
-      <h2 className="text-xl font-semibold text-white mb-4">Cloud files</h2>
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <h2 className="text-xl font-semibold text-white">Cloud files</h2>
+        {authUploader}
+      </div>
       {loading ? (
         <div className="text-slate-400">Loading files…</div>
       ) : files.length === 0 ? (

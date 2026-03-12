@@ -57,16 +57,27 @@ python extract_confluence.py --space "Phonix Sales" --label "export" --output ./
 
 After extracting (with `--manifest`), you can push the export to a single **NotebookLM** notebook. Sources are matched by **title**; if a source with the same title already exists, it is deleted and re-added with the current content (replace-if-exists).
 
-### Auth (one-time)
+### Auth (one-time, optional)
 
-NotebookLM uses **browser-based login** only (no email/password in the script). Run once on your machine:
+NotebookLM uses **browser-based login** only (no email/password in the script). You have two options:
 
-```bash
-pip install "notebooklm-py[browser]"   # if you need browser login
-notebooklm login                       # opens browser; sign in with your Google account; credentials saved to ~/.notebooklm/
-```
+- **Option A — Host login (CLI / scripts):**  
+  Run once on your machine:
 
-After that, the push script can run without interaction. Do not commit `~/.notebooklm/` or any auth files.
+  ```bash
+  pip install "notebooklm-py[browser]"   # if you need browser login
+  notebooklm login                       # opens browser; sign in with your Google account; credentials saved to ~/.notebooklm/
+  ```
+
+  After that, the push script can run without interaction. Do not commit `~/.notebooklm/` or any auth files.
+
+- **Option B — Upload auth file in the dashboard (recommended for Docker users):**  
+  On a machine where you have already logged in with `notebooklm login`, locate the `storage_state.json` file:
+
+  - Linux/macOS: `~/.notebooklm/storage_state.json`
+  - Windows: `%USERPROFILE%\.notebooklm\storage_state.json`
+
+  Then open the dashboard (http://localhost:80) and use the **“Upload NotebookLM auth”** button to upload that file. The backend stores it under `NOTEBOOKLM_HOME/storage_state.json` so all push operations use it. Never share this file or commit it to git.
 
 ### Env and CLI
 

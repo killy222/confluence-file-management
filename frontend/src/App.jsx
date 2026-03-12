@@ -4,6 +4,7 @@ import Overview from './components/Overview';
 import RunHistory from './components/RunHistory';
 import FileList from './components/FileList';
 import TriggerRuns from './components/TriggerRuns';
+import NotebooklmAuthUpload from './components/NotebooklmAuthUpload';
 import { getRuns, getFiles } from './api';
 import './App.css';
 
@@ -78,7 +79,11 @@ function App() {
             <RunHistory runs={runs} loading={loadingRuns} onRefresh={loadRuns} />
           </div>
           <div>
-            <FileList files={files} loading={loadingFiles} />
+            <FileList
+              files={files}
+              loading={loadingFiles}
+              authUploader={<NotebooklmAuthUpload />}
+            />
           </div>
         </div>
       </main>

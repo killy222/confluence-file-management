@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.db import get_db, init_db
-from backend.routers import files, health, runs
+from backend.routers import auth, files, health, runs
 
 logger = logging.getLogger(__name__)
 
@@ -69,3 +69,4 @@ async def unhandled_exception_handler(request, exc: Exception):
 app.include_router(health.router, prefix=API_PREFIX)
 app.include_router(runs.router, prefix=API_PREFIX)
 app.include_router(files.router, prefix=API_PREFIX)
+app.include_router(auth.router, prefix=API_PREFIX)

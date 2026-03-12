@@ -114,9 +114,20 @@ If both commands show a version, Docker and Docker Compose are installed. Otherw
    Save and close the file.
 
 3. **NotebookLM push (optional)**  
-   Only needed if you want to use “Run push files to notebook” in the dashboard. The one-time login opens a browser for Google sign-in and **requires Python on your Windows machine** (Path A does not install Python by default).
+   Only needed if you want to use “Run push files to notebook” in the dashboard.
 
-   - **Option A — Install Python only for this step:**
+   - **Option A — Upload existing auth file (no Python required on this machine):**  
+     If you already logged in to NotebookLM on any machine using `notebooklm login`, you will have a `storage_state.json` file:
+
+     - On that machine, locate:  
+       - Linux/macOS: `~/.notebooklm/storage_state.json`  
+       - Windows: `%USERPROFILE%\.notebooklm\storage_state.json`
+     - Copy that file to your Windows host.
+     - Start the stack (`docker compose up -d --build`), open the dashboard at **http://localhost:80**, and click **“Upload NotebookLM auth”** in the **Cloud files** panel. Select `storage_state.json`. The backend will store it under `NOTEBOOKLM_HOME` (inside the container) so push operations can authenticate.
+
+     You do **not** need to install Python on this Windows machine for Option A.
+
+   - **Option B — Install Python only for this step (run notebooklm login on Windows):**
 
      1. **Check if Python is already installed**  
         Press **Win + R**, type `powershell`, press **Enter**. Then run:
@@ -147,9 +158,9 @@ If both commands show a version, Docker and Docker Compose are installed. Otherw
         notebooklm login
         ```
 
-        A browser opens; sign in with your Google account. Auth is saved under `%USERPROFILE%\.notebooklm`. Set `NOTEBOOKLM_AUTH_DIR=%USERPROFILE%\.notebooklm` in `.env` so the Docker backend can use it.
+        A browser opens; sign in with your Google account. Auth is saved under `%USERPROFILE%\.notebooklm`. Set `NOTEBOOKLM_AUTH_DIR=%USERPROFILE%\.notebooklm` in `.env` so the Docker backend can use it. You can then also upload the resulting `storage_state.json` via the dashboard if desired.
 
-   - **Option B — Skip NotebookLM push:**  
+   - **Option C — Skip NotebookLM push:**  
      If you only need Confluence export and the dashboard (runs, files list), you do not need Python or NotebookLM login. Leave the push-related `.env` vars unset and do not use “Run push files to notebook.”
 
 ---

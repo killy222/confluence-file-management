@@ -38,6 +38,9 @@ class Settings(BaseSettings):
 
     # NotebookLM push: notebook name or ID (env NOTEBOOKLM_NOTEBOOK_NAME overrides)
     notebooklm_notebook_name: str = "Phonix Sales"
+    # NotebookLM auth home directory (env NOTEBOOKLM_HOME overrides). The storage_state.json
+    # file used by notebooklm-py will be written/read from this directory.
+    notebooklm_home: str = ""
 
     def get_extract_path(self) -> str:
         import os
@@ -53,6 +56,21 @@ class Settings(BaseSettings):
         import os
         root = self.project_root or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         return os.path.join(root, self.export_dir)
+
+    def get_notebooklm_home(self) -> str:
+        """Return NotebookLM auth home directory."""
+        import os
+
+        # If explicitly set (or via env), use it.
+        if self.notebooklm_home:
+            return self.notebooklm_home
+        # Prefer NOTEBOOKLM_HOME env if present.
+        env_home = os.environ.get("NOTEBOOKLM_HOME")
+        if env_home:
+            return env_home
+        # Fallback: project-root .notebooklm directory
+        root = self.project_root or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(root, ".notebooklm")
 
 
 settings = Settings()

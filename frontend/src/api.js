@@ -44,3 +44,31 @@ export async function getFiles(runId = null) {
 export async function getFilesByRun(runId) {
   return request(`/files/by-run/${runId}`);
 }
+
+export async function uploadNotebooklmAuth(file) {
+  const url = `${API_BASE}${PREFIX}/auth/notebooklm`;
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    let message = res.statusText || 'Upload failed';
+    try {
+      const body = await res.json();
+      if (body && body.detail) {
+        message = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail);
+      }
+    } catch (_) {
+      // ignore parse errors
+    }
+    const err = new Error(message);
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json();
+}
