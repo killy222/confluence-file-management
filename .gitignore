@@ -29,3 +29,8 @@ node_modules/
 
 # NotebookLM auth (never commit)
 .notebooklm/
+
+# Project-local data / metadata (do not commit)
+agent-os/
+.claude/
+confluence_export/
