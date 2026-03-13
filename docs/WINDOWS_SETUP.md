@@ -105,11 +105,6 @@ If both commands show a version, Docker and Docker Compose are installed. Otherw
    - `CONFLUENCE_USER` — Confluence username.
    - `CONFLUENCE_PASSWORD` — Confluence password.
    - `NOTEBOOKLM_NOTEBOOK_NAME` — target NotebookLM notebook name (e.g. `Phonix Sales`).
-   - `NOTEBOOKLM_AUTH_DIR` — on Windows set to your user profile folder so the container can use your NotebookLM login:
-
-   ```env
-   NOTEBOOKLM_AUTH_DIR=%USERPROFILE%\.notebooklm
-   ```
 
    Save and close the file.
 
@@ -158,7 +153,7 @@ If both commands show a version, Docker and Docker Compose are installed. Otherw
         notebooklm login
         ```
 
-        A browser opens; sign in with your Google account. Auth is saved under `%USERPROFILE%\.notebooklm`. Set `NOTEBOOKLM_AUTH_DIR=%USERPROFILE%\.notebooklm` in `.env` so the Docker backend can use it. You can then also upload the resulting `storage_state.json` via the dashboard if desired.
+        A browser opens; sign in with your Google account. Auth is saved under `%USERPROFILE%\.notebooklm`. You can then also upload the resulting `storage_state.json` via the dashboard if desired. (The container now stores this file internally and no longer mounts `%USERPROFILE%\.notebooklm`.)
 
    - **Option C — Skip NotebookLM push:**  
      If you only need Confluence export and the dashboard (runs, files list), you do not need Python or NotebookLM login. Leave the push-related `.env` vars unset and do not use “Run push files to notebook.”

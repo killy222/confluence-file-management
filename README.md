@@ -136,14 +136,14 @@ docker compose --profile tools run --rm app pytest tests/ -v
 # Run extract (set CONFLUENCE_* in .env or pass env)
 docker compose --profile tools run --rm app python extract_confluence.py --space PHS --label notebook --output /app/confluence_export --manifest
 
-# Run push (mount NotebookLM auth; run 'notebooklm login' on host first)
+# Run push (NotebookLM auth managed inside the backend container)
 docker compose --profile tools run --rm app python push_to_notebooklm.py --export-dir ./confluence_export --notebook "Phonix Sales"
 
 # Shell
 docker compose --profile tools run --rm app bash
 ```
 
-Confluence and NotebookLM credentials: set in `.env` or pass when running; the backend and app containers use `NOTEBOOKLM_AUTH_DIR` (default `$HOME/.notebooklm`) mounted at `/app/.notebooklm`. The backend sets `NOTEBOOKLM_HOME=/app/.notebooklm` so the push script finds auth when triggered via the API.
+Confluence and NotebookLM credentials: set in `.env` or pass when running. The backend and app containers use an internal `/app/.notebooklm` directory for NotebookLM auth (`NOTEBOOKLM_HOME=/app/.notebooklm`). You can upload `storage_state.json` via the dashboard; it is stored only inside the container and no longer mounted from the host.
 
 ## Backend API (Phase 2)
 
