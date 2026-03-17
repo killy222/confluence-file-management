@@ -20,6 +20,14 @@ class TriggerRunsRequest(BaseModel):
         max_length=2,
         description="One or two script names: confluence_export, notebooklm_push. Two = chain (export then push).",
     )
+    space_id: str | None = Field(
+        default=None,
+        description="Optional ID of ConfluenceSpace to use for confluence_export runs.",
+    )
+    notebook_id: str | None = Field(
+        default=None,
+        description="Optional ID of NotebookTarget to use for notebooklm_push runs.",
+    )
 
     @field_validator("scripts")
     @classmethod
@@ -45,6 +53,59 @@ class RunResponse(BaseModel):
     log_output: str | None
     error_message: str | None
     parent_run_id: str | None
+    created_at: datetime
+    updated_at: datetime
+    space_key: str | None
+    notebook_name: str | None
+
+
+# --- Confluence spaces ---
+
+
+class ConfluenceSpaceBase(BaseModel):
+    key: str = Field(..., min_length=1, max_length=64)
+    label: str = Field(..., min_length=1, max_length=255)
+
+
+class ConfluenceSpaceCreate(ConfluenceSpaceBase):
+    pass
+
+
+class ConfluenceSpaceUpdate(BaseModel):
+    key: str | None = Field(default=None, min_length=1, max_length=64)
+    label: str | None = Field(default=None, min_length=1, max_length=255)
+
+
+class ConfluenceSpaceRead(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: str
+    key: str
+    label: str
+    created_at: datetime
+    updated_at: datetime
+
+
+# --- Notebook targets ---
+
+
+class NotebookTargetBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class NotebookTargetCreate(NotebookTargetBase):
+    pass
+
+
+class NotebookTargetUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+
+
+class NotebookTargetRead(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: str
+    name: str
     created_at: datetime
     updated_at: datetime
 

@@ -8,7 +8,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db import get_db
-from backend.models import Run
+from backend.models import Run, ConfluenceSpace, NotebookTarget
 from backend.runner import execute_runs
 from backend.schemas import (
     ListRunsResponse,
@@ -30,6 +30,21 @@ async def trigger_runs(
     now = datetime.now(timezone.utc)
     run_ids: list[str] = []
     parent_id: str | None = None
+    # Resolve Confluence space key once, if provided
+    space_key: str | None = None
+    if body.space_id:
+        space = await db.get(ConfluenceSpace, body.space_id)
+        if not space:
+            raise HTTPException(status_code=400, detail="Unknown space_id")
+        space_key = space.key
+
+    notebook_name: str | None = None
+    if body.notebook_id:
+        nb = await db.get(NotebookTarget, body.notebook_id)
+        if not nb:
+            raise HTTPException(status_code=400, detail="Unknown notebook_id")
+        notebook_name = nb.name
+
     for script in body.scripts:
         run_id = str(uuid4())
         run = Run(
@@ -40,6 +55,8 @@ async def trigger_runs(
             parent_run_id=parent_id,
             created_at=now,
             updated_at=now,
+            space_key=space_key if script == "confluence_export" else None,
+            notebook_name=notebook_name if script == "notebooklm_push" else None,
         )
         db.add(run)
         run_ids.append(run_id)

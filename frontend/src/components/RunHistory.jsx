@@ -27,24 +27,39 @@ function formatAgo(dateStr) {
 }
 
 export default function RunHistory({ runs = [], loading, onRefresh }) {
-  const [detail, setDetail] = useState(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detailsById, setDetailsById] = useState({});
+  const [loadingById, setLoadingById] = useState({});
+  const [errorById, setErrorById] = useState({});
 
-  async function showDetails(id) {
-    setLoadingDetail(true);
-    setDetail(null);
+  async function toggleDetails(id) {
+    if (detailsById[id]) {
+      setDetailsById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setErrorById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      return;
+    }
+
+    setLoadingById((prev) => ({ ...prev, [id]: true }));
+    setErrorById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     try {
       const run = await getRun(id);
-      setDetail(run);
+      setDetailsById((prev) => ({ ...prev, [id]: run }));
     } catch (e) {
-      setDetail({ error: e.message });
+      setErrorById((prev) => ({ ...prev, [id]: e.message || 'Failed to load details' }));
     } finally {
-      setLoadingDetail(false);
+      setLoadingById((prev) => ({ ...prev, [id]: false }));
     }
-  }
-
-  function closeDetail() {
-    setDetail(null);
   }
 
   return (
@@ -82,52 +97,63 @@ export default function RunHistory({ runs = [], loading, onRefresh }) {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => showDetails(run.id)}
+                  onClick={() => toggleDetails(run.id)}
                   className="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm transition min-h-[44px] min-w-[44px]"
                 >
                   Details
                 </button>
                 <button
                   type="button"
-                  onClick={() => showDetails(run.id)}
+                  onClick={() => toggleDetails(run.id)}
                   className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition min-h-[44px]"
                 >
                   Logs
                 </button>
               </div>
+
+              {(loadingById[run.id] || detailsById[run.id] || errorById[run.id]) && (
+                <div className="w-full mt-3">
+                  {loadingById[run.id] && (
+                    <p className="text-slate-400 text-sm">Loading details…</p>
+                  )}
+                  {errorById[run.id] && (
+                    <div className="p-3 rounded-lg bg-red-900/30 border border-red-700 text-red-200 text-sm">
+                      {errorById[run.id]}
+                    </div>
+                  )}
+                  {detailsById[run.id] && !errorById[run.id] && (
+                    <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-700">
+                      <div className="flex items-start justify-between gap-4 mb-2">
+                        <div className="min-w-0">
+                          <p className="text-sm text-slate-400">
+                            {detailsById[run.id].id}
+                          </p>
+                          <p className="text-sm text-slate-400">
+                            {detailsById[run.id].status}
+                            {detailsById[run.id].finished_at ? ` · finished` : ''}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleDetails(run.id)}
+                          className="text-slate-400 hover:text-white"
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <pre className="text-sm text-slate-300 whitespace-pre-wrap overflow-auto max-h-48">
+                        {detailsById[run.id].log_output ||
+                          detailsById[run.id].error_message ||
+                          'No log'}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              )}
             </li>
           ))}
         </ul>
-      )}
-
-      {loadingDetail && <p className="mt-2 text-slate-400 text-sm">Loading details…</p>}
-      {detail && !detail.error && (
-        <div
-          className="mt-4 p-4 rounded-xl bg-slate-800 border border-slate-700"
-          role="dialog"
-          aria-label="Run details"
-        >
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-medium text-white">Run details</h3>
-            <button
-              type="button"
-              onClick={closeDetail}
-              className="text-slate-400 hover:text-white"
-              aria-label="Close"
-            >
-              ×
-            </button>
-          </div>
-          <pre className="text-sm text-slate-300 whitespace-pre-wrap overflow-auto max-h-48">
-            {detail.log_output || detail.error_message || 'No log'}
-          </pre>
-        </div>
-      )}
-      {detail && detail.error && (
-        <div className="mt-4 p-4 rounded-xl bg-red-900/30 border border-red-700 text-red-200 text-sm">
-          {detail.error}
-          <button type="button" onClick={closeDetail} className="ml-2 underline">Dismiss</button>
-        </div>
       )}
     </section>
   );

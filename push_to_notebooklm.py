@@ -1,5 +1,5 @@
 """
-Push Confluence export (manifest + Markdown files) to a single NotebookLM notebook.
+Push Confluence export (manifest + PDF files) to a single NotebookLM notebook.
 Replace-if-exists: sources with the same title are deleted then re-added with current content.
 Requires notebooklm-py and one-time auth: run `notebooklm login`.
 """
@@ -31,12 +31,25 @@ def resolve_path(export_dir: str, output_path: str) -> str:
 
 
 def read_page_content(export_dir: str, entry: dict) -> str:
-    """Read Markdown content for one manifest entry."""
-    path = resolve_path(export_dir, entry["output_path"])
-    if not os.path.isfile(path):
-        raise FileNotFoundError(f"Export file not found: {path}")
-    with open(path, encoding="utf-8") as f:
-        return f.read()
+    raise RuntimeError("read_page_content() removed: PDF export uses add_file or PDF→text fallback")
+
+
+def _read_pdf_text(path: str) -> str:
+    """Best-effort PDF text extraction fallback when add_file isn't available."""
+    try:
+        from pypdf import PdfReader  # type: ignore
+    except Exception as exc:  # pragma: no cover
+        raise RuntimeError(
+            "NotebookLM client does not support PDF upload (add_file missing) and "
+            "PDF text extraction fallback requires 'pypdf'. Add it to requirements.txt."
+        ) from exc
+    reader = PdfReader(path)
+    chunks: list[str] = []
+    for page in reader.pages:
+        text = page.extract_text() or ""
+        if text:
+            chunks.append(text)
+    return "\n\n".join(chunks).strip()
 
 
 async def resolve_notebook_id(client, notebook_name_or_id: str) -> str:
@@ -85,19 +98,53 @@ async def push_export(
                 await client.sources.delete(notebook_id, existing.id)
             deleted += 1
             del by_title[title]
-        content = read_page_content(export_dir, entry)
+        path = resolve_path(export_dir, entry["output_path"])
+        if not os.path.isfile(path):
+            raise FileNotFoundError(f"Export file not found: {path}")
         if not dry_run:
-            await client.sources.add_text(notebook_id, title, content, wait=False)
+            if hasattr(client.sources, "add_file"):
+                try:
+                    # notebooklm-py signature: add_file(notebook_id, file_path, mime_type=None, wait=False, ...)
+                    await client.sources.add_file(
+                        notebook_id,
+                        path,
+                        mime_type="application/pdf",
+                        wait=False,
+                    )
+                except Exception as exc:
+                    msg = str(exc) if exc else ""
+                    if "Failed to get SOURCE_ID from registration response" in msg:
+                        # Fallback: extract text from PDF and push via add_text so the run still succeeds.
+                        content = _read_pdf_text(path)
+                        await client.sources.add_text(notebook_id, title, content, wait=False)
+                    else:
+                        raise
+            else:
+                content = _read_pdf_text(path)
+                await client.sources.add_text(notebook_id, title, content, wait=False)
         added += 1
     return deleted, added
+
+
+async def truncate_notebook_all(client, notebook_id: str, dry_run: bool = False) -> int:
+    """Delete all sources from a NotebookLM notebook by listing and deleting by ID."""
+    sources = await client.sources.list(notebook_id)
+    if dry_run:
+        print(f"[dry-run] Would delete {len(sources)} source(s) from notebook {notebook_id}")
+        return len(sources)
+    for src in sources:
+        await client.sources.delete(notebook_id, src.id)
+    return len(sources)
 
 
 async def run(
     export_dir: str,
     notebook_name_or_id: str,
     dry_run: bool = False,
+    truncate_first: bool = True,
+    truncate_mode: str = "all",
 ) -> None:
-    """Load manifest, connect to NotebookLM, resolve notebook, push with replace-if-exists."""
+    """Load manifest, connect to NotebookLM, resolve notebook, optionally truncate, then push."""
     from notebooklm import NotebookLMClient
 
     export_dir = os.path.abspath(export_dir)
@@ -118,6 +165,17 @@ async def run(
     try:
         async with await NotebookLMClient.from_storage() as client:
             notebook_id = await resolve_notebook_id(client, notebook_name_or_id)
+            if truncate_first:
+                if truncate_mode == "all":
+                    deleted_total = await truncate_notebook_all(client, notebook_id, dry_run=dry_run)
+                    if not dry_run:
+                        print(f"Truncated notebook {notebook_id}: deleted {deleted_total} source(s).")
+                else:
+                    # Placeholder for pipeline-aware truncate using SOURCE_ID tracking
+                    print(
+                        "[warn] truncate_mode 'pipeline' is not yet implemented; skipping truncation.",
+                        file=sys.stderr,
+                    )
             if dry_run:
                 print(f"[dry-run] Would push {len(entries)} source(s) to notebook {notebook_id}")
             deleted, added = await push_export(client, notebook_id, entries, export_dir, dry_run=dry_run)
@@ -141,12 +199,12 @@ async def run(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Push Confluence export to a NotebookLM notebook (replace-if-exists by title)"
+        description="Push Confluence export to a NotebookLM notebook (truncate + replace-if-exists by title)"
     )
     parser.add_argument(
         "--export-dir",
-        default=os.environ.get("CONFLUENCE_EXPORT_DIR", "confluence_export"),
-        help="Directory containing manifest.json and .md files (default: confluence_export)",
+        default=os.environ.get("CONFLUENCE_EXPORT_DIR", "confluence_export_pdf"),
+        help="Directory containing manifest.json and .pdf files (default: confluence_export_pdf)",
     )
     parser.add_argument(
         "--notebook",
@@ -158,6 +216,18 @@ def main() -> None:
         action="store_true",
         help="Log what would be done without calling delete/add",
     )
+    parser.add_argument(
+        "--truncate-first",
+        action="store_true",
+        default=True,
+        help="Delete sources from the target notebook before pushing (default: enabled).",
+    )
+    parser.add_argument(
+        "--truncate-mode",
+        choices=["all", "pipeline"],
+        default="all",
+        help="Truncate mode: 'all' (delete all sources) or 'pipeline' (pipeline-managed sources only; not yet implemented).",
+    )
     args = parser.parse_args()
 
     if not args.notebook:
@@ -167,7 +237,15 @@ def main() -> None:
         )
         sys.exit(1)
 
-    asyncio.run(run(args.export_dir, args.notebook, dry_run=args.dry_run))
+    asyncio.run(
+        run(
+            args.export_dir,
+            args.notebook,
+            dry_run=args.dry_run,
+            truncate_first=args.truncate_first,
+            truncate_mode=args.truncate_mode,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """
-Extract Confluence space pages to Markdown.
+Extract Confluence space pages to PDFs (via Confluence PDF export).
 Supports filtering by label (e.g. "notebook") via CQL.
 Credentials can be provided via CLI or env: CONFLUENCE_URL, CONFLUENCE_USER, CONFLUENCE_PASSWORD.
 """
@@ -8,8 +8,10 @@ import argparse
 import json
 import os
 import sys
+from pathlib import Path
+from urllib.parse import urljoin
 
-import markdownify
+import requests
 from atlassian import Confluence
 
 
@@ -47,36 +49,74 @@ def fetch_page_ids_by_cql(confluence, cql, limit=50):
         start += limit
 
 
-def get_full_page(confluence, page_id):
-    """Fetch a single page by ID with full body storage (for complete content)."""
-    return confluence.get_page_by_id(page_id, expand="body.storage")
+def build_base_url(url: str) -> str:
+    url = (url or "").strip()
+    if url.endswith("/"):
+        url = url[:-1]
+    return url
 
 
-def page_to_markdown(page):
-    """Convert a Confluence page dict to markdown string."""
-    title = page["title"]
-    body_html = page.get("body", {}).get("storage", {}).get("value", "")
-    markdown_text = markdownify.markdownify(body_html, heading_style="ATX")
-    return f"# {title}\n\nConfluence Page ID: {page['id']}\n\n{markdown_text}"
-
-
-def sanitize_filename(title):
-    """Build a safe filename from page title."""
+def sanitize_filename(title: str, page_id: str) -> str:
+    """Build a safe, mostly-human-readable PDF filename from page title + page id."""
     safe = "".join(
         c for c in title if c.isalpha() or c.isdigit() or c in (" ", "-", "_")
     ).strip()
-    return safe.replace(" ", "_") + ".md"
+    safe = safe.replace(" ", "_") or "page"
+    return f"{safe}_{page_id}.pdf"
+
+
+def export_page_pdf(
+    *,
+    base_url: str,
+    username: str,
+    password: str,
+    page_id: str,
+    output_path: Path,
+) -> Path:
+    """
+    Export a Confluence page as PDF using the same internal action as the UI:
+    /spaces/flyingpdf/pdfpageexport.action?pageId={page_id}
+    """
+    base_url = build_base_url(base_url)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    session = requests.Session()
+    session.auth = (username, password)
+    session.headers.update({"X-Atlassian-Token": "no-check"})
+
+    export_url = f"{base_url}/spaces/flyingpdf/pdfpageexport.action?pageId={page_id}"
+    resp = session.get(export_url, allow_redirects=False)
+    if resp.status_code in (301, 302, 303, 307, 308) and "Location" in resp.headers:
+        location = resp.headers["Location"]
+        download_url = (
+            location
+            if location.startswith("http://") or location.startswith("https://")
+            else urljoin(base_url, location)
+        )
+        dl_resp = session.get(download_url, stream=True)
+        dl_resp.raise_for_status()
+        pdf_bytes = dl_resp.content
+    elif resp.headers.get("Content-Type", "").startswith("application/pdf"):
+        pdf_bytes = resp.content
+    else:
+        resp.raise_for_status()
+
+    output_path.write_bytes(pdf_bytes)
+    return output_path
 
 
 def extract_space(
     confluence,
+    base_url: str,
+    username: str,
+    password: str,
     space_key,
     label,
     output_dir,
     write_manifest=False,
 ):
     """
-    Extract pages from space that have the given label to Markdown files.
+    Extract pages from space that have the given label to PDF files.
     Returns list of dicts: [{"page_id", "title", "output_path"}, ...].
     """
     os.makedirs(output_dir, exist_ok=True)
@@ -84,20 +124,21 @@ def extract_space(
     manifest_entries = []
 
     for page_id, title in fetch_page_ids_by_cql(confluence, cql):
-        # CQL search does not return full body; fetch full page by ID
-        page = get_full_page(confluence, page_id)
-        if not page:
+        page_id = str(page_id)
+        if not page_id or not title:
             continue
-        filename = sanitize_filename(title)
+        filename = sanitize_filename(title, page_id)
         filepath = os.path.join(output_dir, filename)
 
-        content = page_to_markdown(page)
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        manifest_entries.append(
-            {"page_id": page["id"], "title": title, "output_path": filepath}
+        export_page_pdf(
+            base_url=base_url,
+            username=username,
+            password=password,
+            page_id=page_id,
+            output_path=Path(filepath),
         )
+
+        manifest_entries.append({"page_id": page_id, "title": title, "output_path": filepath})
 
     if write_manifest and manifest_entries:
         manifest_path = os.path.join(output_dir, "manifest.json")
@@ -109,7 +150,7 @@ def extract_space(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Extract Confluence space to Markdown (optional: by label)"
+        description="Extract Confluence space pages to PDFs (optional: by label)"
     )
     parser.add_argument(
         "--url",
@@ -129,8 +170,8 @@ def main():
     parser.add_argument("--space", required=True, help="Space Key or Name to extract")
     parser.add_argument(
         "--output",
-        default="output",
-        help="Output directory",
+        default="confluence_export_pdf",
+        help="Output directory (default: confluence_export_pdf)",
     )
     parser.add_argument(
         "--label",
@@ -174,9 +215,12 @@ def main():
     print(f"Fetching pages from space {space_key} with label '{args.label}'...")
     entries = extract_space(
         confluence,
-        space_key,
-        args.label,
-        args.output,
+        base_url=args.url,
+        username=args.username,
+        password=args.password,
+        space_key=space_key,
+        label=args.label,
+        output_dir=args.output,
         write_manifest=args.manifest,
     )
     print(f"Done. Extracted {len(entries)} page(s) to {args.output}")

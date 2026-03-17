@@ -5,7 +5,9 @@ import RunHistory from './components/RunHistory';
 import FileList from './components/FileList';
 import TriggerRuns from './components/TriggerRuns';
 import NotebooklmAuthUpload from './components/NotebooklmAuthUpload';
-import { getRuns, getFiles } from './api';
+import SpacesManager from './components/SpacesManager';
+import NotebookManager from './components/NotebookManager';
+import { getRuns, getFiles, getSpaces, getNotebooks } from './api';
 import './App.css';
 
 function App() {
@@ -14,6 +16,8 @@ function App() {
   const [loadingRuns, setLoadingRuns] = useState(true);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [error, setError] = useState(null);
+  const [spaces, setSpaces] = useState([]);
+  const [notebooks, setNotebooks] = useState([]);
 
   const loadRuns = useCallback(async (silent = false) => {
     if (!silent) {
@@ -43,10 +47,30 @@ function App() {
     }
   }, []);
 
+  const loadSpaces = useCallback(async () => {
+    try {
+      const data = await getSpaces();
+      setSpaces(data || []);
+    } catch (_) {
+      setSpaces([]);
+    }
+  }, []);
+
+  const loadNotebooks = useCallback(async () => {
+    try {
+      const data = await getNotebooks();
+      setNotebooks(data || []);
+    } catch (_) {
+      setNotebooks([]);
+    }
+  }, []);
+
   useEffect(() => {
     loadRuns();
     loadFiles();
-  }, [loadRuns, loadFiles]);
+    loadSpaces();
+    loadNotebooks();
+  }, [loadRuns, loadFiles, loadSpaces, loadNotebooks]);
 
   const hasRunning = runs.some((r) => r.status === 'running');
   useEffect(() => {
@@ -72,11 +96,18 @@ function App() {
             {error} — is the backend running at {import.meta.env.VITE_API_URL || 'http://localhost:8000'}?
           </div>
         )}
-        <TriggerRuns onTriggered={handleTriggered} />
+        <TriggerRuns
+          onTriggered={handleTriggered}
+          runs={runs}
+          spaces={spaces}
+          notebooks={notebooks}
+        />
         <Overview runs={runs} loading={loadingRuns} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
           <div className="lg:col-span-2">
             <RunHistory runs={runs} loading={loadingRuns} onRefresh={loadRuns} />
+            <SpacesManager spaces={spaces} onReload={loadSpaces} />
+            <NotebookManager notebooks={notebooks} onReload={loadNotebooks} />
           </div>
           <div>
             <FileList

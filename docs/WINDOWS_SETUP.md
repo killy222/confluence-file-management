@@ -183,6 +183,20 @@ If both commands show a version, Docker and Docker Compose are installed. Otherw
    - **Dashboard:** [http://localhost:80](http://localhost:80)
    - **API docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
+5. Configure Confluence spaces from the dashboard:
+
+   - In the left column (under **Active pipelines**), use the **“Confluence spaces”** section to add the spaces you want to export:
+     - **Label** — human-friendly name (e.g. `Phonix Sales`).
+     - **Space key** — Confluence space key (e.g. `PHS`).
+   - These spaces are stored in the backend database and shown in the **Confluence space** dropdown above the run buttons.
+   - When you click **“Run Confluence Export”** or **“Run all”**, the selected space is used for that export run.
+
+6. Configure NotebookLM notebooks from the dashboard:
+
+   - In the left column, under **NotebookLM notebooks**, add the names of the NotebookLM notebooks you want to push to (for example `Phonix Sales`).
+   - These notebook targets are stored in the backend database and shown in the **NotebookLM notebook** dropdown above the run buttons.
+   - When you click **“Run push files to notebook”** or **“Run all”**, the selected notebook is used for that push run. You no longer need `NOTEBOOKLM_NOTEBOOK_NAME` in `.env` for normal use.
+
 ---
 
 ## 5. Verify

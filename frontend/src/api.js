@@ -29,10 +29,10 @@ export async function getRun(id) {
   return request(`/runs/${id}`);
 }
 
-export async function triggerRuns(scripts) {
+export async function triggerRuns(body) {
   return request('/runs', {
     method: 'POST',
-    body: JSON.stringify({ scripts }),
+    body: JSON.stringify(body),
   });
 }
 
@@ -71,4 +71,56 @@ export async function uploadNotebooklmAuth(file) {
   }
 
   return res.json();
+}
+
+// --- Confluence spaces ---
+
+export async function getSpaces() {
+  return request('/spaces');
+}
+
+export async function createSpace(payload) {
+  return request('/spaces', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateSpace(id, payload) {
+  return request(`/spaces/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteSpace(id) {
+  return request(`/spaces/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+}
+
+// --- NotebookLM notebooks ---
+
+export async function getNotebooks() {
+  return request('/notebooks');
+}
+
+export async function createNotebook(payload) {
+  return request('/notebooks', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateNotebook(id, payload) {
+  return request(`/notebooks/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteNotebook(id) {
+  return request(`/notebooks/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
 }

@@ -183,6 +183,46 @@ To roll back: `alembic downgrade -1`.
 | `CONFLUENCE_URL`, `CONFLUENCE_USER`, `CONFLUENCE_PASSWORD` | Passed through to extract script when triggering runs |
 | `NOTEBOOKLM_NOTEBOOK_NAME`, `CONFLUENCE_EXPORT_DIR` | Passed through to push script |
 
+### Confluence spaces configuration
+
+Confluence spaces are now managed from the **dashboard**:
+
+- Use the **“Confluence spaces”** panel (left column, under Active pipelines) to:
+  - Add spaces by **label** (e.g. `Phonix Sales`) and **space key** (e.g. `PHS`).
+  - Edit labels or delete spaces.
+- The **Run Confluence Export** / **Run all** buttons use the space selected in the **Confluence space** dropdown.
+  - The backend looks up the space by ID and stores its `space_key` on each `confluence_export` run.
+  - The most recently used space is reused as the default when possible.
+
+You can still set `CONFLUENCE_SPACE` in `.env` as a legacy default, but the recommended flow is to manage spaces via the dashboard selector.
+
+### NotebookLM notebooks configuration
+
+NotebookLM notebooks are also managed from the **dashboard**:
+
+- Use the **“NotebookLM notebooks”** section (left column, below Confluence spaces) to:
+  - Add notebook names that correspond to your NotebookLM notebooks (e.g. `Phonix Sales`).
+  - Edit or delete notebook targets as needed.
+- The **Run push files to notebook** / **Run all** buttons use the notebook selected in the **NotebookLM notebook** dropdown.
+  - The backend resolves the selected notebook at trigger-time and stores the `notebook_name` on each `notebooklm_push` run.
+  - The most recently used notebook is reused as the default when possible.
+
+`NOTEBOOKLM_NOTEBOOK_NAME` in `.env` remains a legacy fallback only; normal operation should use the dashboard-managed notebook selector.
+
+### Truncate NotebookLM notebook before push (optional)
+
+By default, pushes use a **replace-by-title** strategy only: per page, existing sources with the same title are deleted and re-added.
+
+You can instead choose to **clear the entire target NotebookLM notebook before each push**:
+
+- Set `NOTEBOOKLM_TRUNCATE_BEFORE_PUSH=true` in `.env` (or the backend environment).
+- When this is enabled, the backend will call `push_to_notebooklm.py` with `--truncate-first`, which:
+  - Lists all sources in the selected notebook.
+  - Deletes them by ID.
+  - Then pushes the current PDFs.
+
+Use this only for notebooks dedicated to this pipeline, since it will remove any manually added sources as well.
+
 ## Dashboard (Phase 3)
 
 React dashboard (Vite + Tailwind) that consumes the backend API: run history, exported files list, and trigger runs.

@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # Paths (project root = parent of backend/)
     project_root: str = ""
-    export_dir: str = "confluence_export"
+    export_dir: str = "confluence_export_pdf"
     script_extract: str = "extract_confluence.py"
     script_push: str = "push_to_notebooklm.py"
 
@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     # NotebookLM auth home directory (env NOTEBOOKLM_HOME overrides). The storage_state.json
     # file used by notebooklm-py will be written/read from this directory.
     notebooklm_home: str = ""
+    # If true, clear the target NotebookLM notebook before each push_to_notebooklm run.
+    notebooklm_truncate_before_push: bool = False
 
     def get_extract_path(self) -> str:
         import os

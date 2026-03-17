@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
-# Backend deps + script deps (atlassian, markdownify, notebooklm-py)
+# Backend deps + script deps (atlassian, requests, notebooklm-py)
 COPY requirements.txt ./
 COPY backend/requirements.txt backend/
 RUN pip install --no-cache-dir -r backend/requirements.txt \

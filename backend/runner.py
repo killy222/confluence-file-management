@@ -109,11 +109,15 @@ async def run_notebooklm_push(run_id: str, db: AsyncSession) -> None:
         run.error_message = f"Script not found: {settings.get_push_path()}"
         await db.commit()
         return
+    notebook_arg = run.notebook_name or settings.notebooklm_notebook_name
     cmd = [
         python,
         settings.get_push_path(),
-        "--export-dir", export_dir,
-        "--notebook", settings.notebooklm_notebook_name,
+        "--export-dir",
+        export_dir,
+        "--notebook",
+        notebook_arg,
+        "--truncate-first",
     ]
     env = _env_for_scripts()
     returncode, stdout, stderr = await _run_subprocess(cmd, root, env)

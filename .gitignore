@@ -34,3 +34,4 @@ node_modules/
 agent-os/
 .claude/
 confluence_export/
+confluence_export_pdf/

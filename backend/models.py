@@ -42,6 +42,10 @@ class Run(Base):
         nullable=True,
         index=True,
     )
+    # Optional Confluence space key used for this run (e.g. "PHS")
+    space_key: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    # Optional NotebookLM notebook name used for this run (e.g. "Phonix Sales")
+    notebook_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utc_now
     )
@@ -82,3 +86,91 @@ class ExportedFile(Base):
     run: Mapped["Run"] = relationship("Run", back_populates="exported_files")
 
     __table_args__ = (Index("ix_exported_files_run_id", "run_id"),)
+
+
+class ConfluenceSpace(Base):
+    """A saved Confluence space (key + human label)."""
+
+    __tablename__ = "confluence_spaces"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        primary_key=True,
+        default=lambda: str(uuid4()),
+    )
+    key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    label: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utc_now, onupdate=_utc_now
+    )
+
+
+class NotebookTarget(Base):
+    """A saved NotebookLM notebook target (name only)."""
+
+    __tablename__ = "notebook_targets"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        primary_key=True,
+        default=lambda: str(uuid4()),
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utc_now, onupdate=_utc_now
+    )
+
+    notebook_sources: Mapped[list["NotebookSource"]] = relationship(
+        "NotebookSource",
+        back_populates="notebook_target",
+        cascade="all, delete-orphan",
+    )
+
+
+class NotebookSource(Base):
+    """A tracked NotebookLM source for a given notebook + page/title."""
+
+    __tablename__ = "notebook_sources"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        primary_key=True,
+        default=lambda: str(uuid4()),
+    )
+    notebook_target_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("notebook_targets.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    # We keep both page_id and title to support matching either by manifest page_id
+    # or by title when page_id is unavailable.
+    page_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    title: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    notebook_source_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utc_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utc_now, onupdate=_utc_now
+    )
+
+    notebook_target: Mapped["NotebookTarget"] = relationship(
+        "NotebookTarget",
+        back_populates="notebook_sources",
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_notebook_sources_target_page_title",
+            "notebook_target_id",
+            "page_id",
+            "title",
+        ),
+    )
